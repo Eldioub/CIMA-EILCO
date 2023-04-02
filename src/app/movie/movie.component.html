@@ -1,0 +1,11 @@
+<div class="contain mt-5 p-5">
+    <div class="row mt-5">
+        <div class="col-lg-4" *ngFor="let s of searchResult">
+            <div class="row">
+                <div class="col-lg-3 mt-4 mb-4">
+                    <img src="https://image.tmdb.org/t/p/original/{{ s.poster_path }}" [routerLink]="['/movie',s.id]" class="rowimg">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

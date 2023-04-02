@@ -1,0 +1,23 @@
+.navbar .navbar-brand {
+    color: #E50914;
+    font-weight: bold;
+}
+
+.navbar-nav .nav-item {
+    color: #E50914;
+}
+
+.nav-link {
+    color: #ffffff;
+}
+
+.icon {
+    padding: 12px 12px 0;
+    color: #ffff;
+}
+
+.icon:hover,
+.nav-link:hover {
+    cursor: pointer;
+    color: #E50914;
+}

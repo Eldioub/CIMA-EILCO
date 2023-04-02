@@ -2,28 +2,39 @@ import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { GoogleAuthProvider, GithubAuthProvider, FacebookAuthProvider} from '@angular/fire/auth'
 import { Router } from '@angular/router';
+import { DataFirestoreService } from './data-firestore.service';
+import { AngularFireDatabase } from '@angular/fire/compat/database';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  constructor(private fireauth : AngularFireAuth, private router : Router) { }
+  errorMessage : any = {login : '', register : '', sendEmailForVerification : '', forgotPassword : ''};
+
+  constructor(private fireauth : AngularFireAuth, private router : Router,private data:DataFirestoreService,private db: AngularFireDatabase) { }
 
   // login method
   login(email : string, password : string) {
     this.fireauth.signInWithEmailAndPassword(email,password).then( res => {
         localStorage.setItem('token','true');
+        localStorage.setItem('user',JSON.stringify(res.user));
 
         if(res.user?.emailVerified == true) {
+          let p={
+            id:'',
+            id_user:res.user?.uid,
+            date:Date.now(),
+            operation:'login'
+          };
+          this.data.add_profil(p);
           this.router.navigate(['home']);
         } else {
           this.router.navigate(['/verify-email']);
         }
 
     }, err => {
-        alert(err.message);
-        this.router.navigate(['/sing-in']);
+        this.errorMessage.login = 'The email or password you entered is incorrect';
     })
   }
 
@@ -33,21 +44,38 @@ export class AuthService {
   }
 
   // register method
-  register(email : string, password : string) {
+  register(email : string, password : string,username : string) {
     this.fireauth.createUserWithEmailAndPassword(email, password).then( res => {
       alert('Registration Successful');
-      this.sendEmailForVarification(res.user);
+      if(res.user!=null){
+            // res.user.updateProfile(dis:id);
+            res.user.updateProfile({
+              
+              displayName: username
+            });}
+
+      this.sendEmailForVerification(res.user);
       this.router.navigate(['/sign-in']);
     }, err => {
-      alert(err.message);
-      this.router.navigate(['/sign-up']);
+      this.errorMessage.register = 'The email you entered is registered';
     })
   }
 
   // sign out
   async logout() {
-    await this.fireauth.signOut();
+     await this.fireauth.signOut();
+     let user=localStorage.getItem('user');
+     if(user!=null){
+     let p={
+             id:'',
+             id_user:JSON.parse(user).uid,
+             date:Date.now(),
+             operation:'logout'
+           };
+     this.data.add_profil(p);}
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userMail');
     this.router.navigate(['/sign-in']);
   }
 
@@ -56,23 +84,32 @@ export class AuthService {
       this.fireauth.sendPasswordResetEmail(email).then(() => {
         this.router.navigate(['/verify-email']);
       }, err => {
-        alert('Something went wrong');
+        alert('The email you entered isn\'t associated with an account');
       })
   }
 
-  // email varification
-  sendEmailForVarification(user : any) {
+  // email verification
+  sendEmailForVerification(user : any) {
     console.log(user);
     user.sendEmailVerification().then((res : any) => {
       this.router.navigate(['/verify-email']);
     }, (err : any) => {
-      alert('Something went wrong. Not able to send mail to your email.')
+        alert('The email you entered is incorrect');
     })
   }
 
   //sign in with google
   googleSignIn() {
     return this.fireauth.signInWithPopup(new GoogleAuthProvider).then(res => {
+      localStorage.setItem('user',JSON.stringify(res.user));
+      if(res.user==null) return;
+      let p={
+        id:'',
+        id_user:res.user?.uid,
+        date:Date.now(),
+        operation:'login'
+      };
+      this.data.add_profil(p);
 
       this.router.navigate(['/home']);
       localStorage.setItem('token',JSON.stringify(res.user?.uid));
