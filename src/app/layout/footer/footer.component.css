@@ -1,0 +1,16 @@
+footer {
+  background-color: #111;
+  color: #fff;
+  padding: 20px 0;
+}
+
+footer p {
+  font-size: 14px;
+}
+
+.footer-profile:hover {
+  text-decoration: underline;
+  color: #E50914;
+  font-weight: bold;
+  cursor: pointer;
+}
